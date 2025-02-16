@@ -6,6 +6,8 @@
 # =======================================================
 import os
 from typing import Any, List
+
+from llama_index.core.base.embeddings.base import Embedding
 from llama_index.llms import vllm
 from llama_index.core.embeddings import BaseEmbedding
 from llama_index.core.llms import (
@@ -66,7 +68,8 @@ class VllmLLM(CustomLLM):
             yield CompletionResponse(text=response, delta=token)
 
 
-class SelfEmbeddingLLM(BaseEmbedding):
+class EmbeddingLLM(BaseEmbedding):
+    vllm_embedding_model: Any = Field(default=None, description="VLLM 模型实例")
     # 导入自己的嵌入模型提供的模块，实现embed 方法
     def __init__(
             self,
@@ -84,12 +87,20 @@ class SelfEmbeddingLLM(BaseEmbedding):
         return embedding
 
     # 批量生成向量（模拟）
-    def get_text_embeddings(self, texts: List[str]) -> List[List[float]]:
+    def _get_text_embeddings(self, texts: List[str]) -> List[List[float]]:
         embeddings = self._model.embed(
                 [text for text in texts]
         )
         return embeddings
 
+    def _get_text_embedding(self, text: str) -> Embedding:
+        pass
+
+    async def _aget_query_embedding(self, query: str) -> Embedding:
+        pass
+
+    def _get_query_embedding(self, query: str) -> Embedding:
+        pass
 
 if __name__ == '__main__':
     # llm = VllmLLM(r'E:\PyCharm\PreTrainModel\qwen2_7b_instruct_awq_int4')
