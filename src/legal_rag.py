@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-# @Time    : 2025/2/16 11:01
+# @Time    : 2025/2/19 下午2:23
 # @Author  : yblir
-# @File    : load_data.py
+# @File    : legal_rag.py
 # explain  : 
 # =======================================================
