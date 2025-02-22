@@ -13,7 +13,7 @@ from llama_index.embeddings.ollama import OllamaEmbedding
 from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.llms.ollama import Ollama
 from llama_index.llms.openai import OpenAI
-from llama_index.llms.dashscope import DashScope, DashScopeGenerationModels
+# from llama_index.llms.dashscope import DashScope, DashScopeGenerationModels
 from llama_index.vector_stores import chroma
 from llama_index.vector_stores.chroma import ChromaVectorStore
 from llama_index.core.storage import StorageContext
@@ -45,49 +45,49 @@ from llama_index.core.retrievers import QueryFusionRetriever
 
 
 # 分别定义两个构造检索器的函数，一个基于向量索引，另一个基于关键词表索引
-def create_vector_index_retriever(name: str):
-    # 解析 Document 为 Node
-    city_docs = SimpleDirectoryReader(input_files=[f"../../data/citys/{name}.txt"]).load_data()
-    splitter = SentenceSplitter(chunk_size=300, chunk_overlap=0)
-    nodes = splitter.get_nodes_from_documents(city_docs)
-    # 存储到向量库 Chroma 中
-    collection = chroma.get_or_create_collection(name=f"agent_{citys_dict[name]}",
-                                                 metadata={"hnsw:space": "cosine"})
-    vector_store = ChromaVectorStore(chroma_collection=collection)
-    # 首次运行时构造向量索引，完成后进行持久化存储，以后直接加载
-    if not os.path.exists(f"./storage/vectorindex/{citys_dict[name]}"):
-        print('Creating vector index...\n')
-        storage_context = StorageContext.from_defaults(vector_store=vector_store)
-        vector_index = VectorStoreIndex(nodes, storage_context=storage_context)
-        vector_index.storage_context.persist(persist_dir=f"./storage/vectorindex/{citys_dict[name]}")
-    else:
-        print('Loading vector index...\n')
-        storage_context = StorageContext.from_defaults(persist_dir=f"./storage/vectorindex/{citys_dict[name]}",
-                                                       vector_store=vector_store)
-        vector_index = load_index_from_storage(storage_context=storage_context)
-
-    vector_retriever = vector_index.as_retriever(similarity_top_k=3)
-
-    return vector_retriever
-
-
-def create_kw_index_retriever(name: str):
-    city_docs = SimpleDirectoryReader(input_files=[f"../../data/citys/{name}.txt"]).load_data()
-    splitter = SentenceSplitter(chunk_size=500, chunk_overlap=0)
-    nodes = splitter.get_nodes_from_documents(city_docs)
-
-    if not os.path.exists(f"./storage/keywordindex/{citys_dict[name]}"):
-        print('Creating keyeword index...\n')
-        # 构造关键词表索引
-        kw_index = KeywordTableIndex(nodes)
-        kw_index.storage_context.persist(persist_dir=f"./storage/keywordindex/{citys_dict[name]}")
-    else:
-        print('Loading keyeword index...\n')
-        storage_context = StorageContext.from_defaults(persist_dir=f"./storage/keywordindex/{citys_dict[name]}")
-        # 返回关键词检索器
-        kw_index = load_index_from_storage(storage_context=storage_context)
-
-    return kw_index.as_retriever(num_chunks_per_query=5)
+# def create_vector_index_retriever(name: str):
+#     # 解析 Document 为 Node
+#     city_docs = SimpleDirectoryReader(input_files=[f"../../data/citys/{name}.txt"]).load_data()
+#     splitter = SentenceSplitter(chunk_size=300, chunk_overlap=0)
+#     nodes = splitter.get_nodes_from_documents(city_docs)
+#     # 存储到向量库 Chroma 中
+#     collection = chroma.get_or_create_collection(name=f"agent_{citys_dict[name]}",
+#                                                  metadata={"hnsw:space": "cosine"})
+#     vector_store = ChromaVectorStore(chroma_collection=collection)
+#     # 首次运行时构造向量索引，完成后进行持久化存储，以后直接加载
+#     if not os.path.exists(f"./storage/vectorindex/{citys_dict[name]}"):
+#         print('Creating vector index...\n')
+#         storage_context = StorageContext.from_defaults(vector_store=vector_store)
+#         vector_index = VectorStoreIndex(nodes, storage_context=storage_context)
+#         vector_index.storage_context.persist(persist_dir=f"./storage/vectorindex/{citys_dict[name]}")
+#     else:
+#         print('Loading vector index...\n')
+#         storage_context = StorageContext.from_defaults(persist_dir=f"./storage/vectorindex/{citys_dict[name]}",
+#                                                        vector_store=vector_store)
+#         vector_index = load_index_from_storage(storage_context=storage_context)
+#
+#     vector_retriever = vector_index.as_retriever(similarity_top_k=3)
+#
+#     return vector_retriever
+#
+#
+# def create_kw_index_retriever(name: str):
+#     city_docs = SimpleDirectoryReader(input_files=[f"../../data/citys/{name}.txt"]).load_data()
+#     splitter = SentenceSplitter(chunk_size=500, chunk_overlap=0)
+#     nodes = splitter.get_nodes_from_documents(city_docs)
+#
+#     if not os.path.exists(f"./storage/keywordindex/{citys_dict[name]}"):
+#         print('Creating keyeword index...\n')
+#         # 构造关键词表索引
+#         kw_index = KeywordTableIndex(nodes)
+#         kw_index.storage_context.persist(persist_dir=f"./storage/keywordindex/{citys_dict[name]}")
+#     else:
+#         print('Loading keyeword index...\n')
+#         storage_context = StorageContext.from_defaults(persist_dir=f"./storage/keywordindex/{citys_dict[name]}")
+#         # 返回关键词检索器
+#         kw_index = load_index_from_storage(storage_context=storage_context)
+#
+#     return kw_index.as_retriever(num_chunks_per_query=5)
 
 
 class FusionRetriever(BaseRetriever):
@@ -208,7 +208,7 @@ class FusionRetriever(BaseRetriever):
 # 使用llamaindex官方封装的融合检索器
 # def fusion_retriever():
 class FusionRetriever2:
-    def __init__(self,retriever_llm,similarity_top_k=3,num_queries=4):
+    def __init__(self, retriever_llm, similarity_top_k=3, num_queries=4):
         # 两个检索器
         vector_retriever = create_vector_index_retriever('南京市')
         kw_retriever = create_kw_index_retriever('南京市')
@@ -227,13 +227,14 @@ class FusionRetriever2:
         # 查询引擎,不再外面暴露
         self._query_engine = RetrieverQueryEngine(fusion_retriever)
 
-    def query(self, query_question:str):
+    def query(self, query_question: str):
         return self._query_engine.query(query_question)
     # 查询
     # response = query_engine.query(query)
     # pprint_response(response)
 
+
 if __name__ == '__main__':
     retriever_llm_ = CustomVllmLLM('/mnt/e/PyCharm/PreTrainModel/qwen2_7b_instruct_awq_int4')
-    a=FusionRetriever2(retriever_llm_,3,4)
+    a = FusionRetriever2(retriever_llm_, 3, 4)
     a.query('dd')

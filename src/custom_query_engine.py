@@ -14,7 +14,6 @@ from llama_index.core.prompts.mixin import PromptDictType
 from llama_index.core.query_engine import CustomQueryEngine
 from llama_index.core.query_engine.custom import STR_OR_RESPONSE_TYPE
 from llama_index.core.response_synthesizers import BaseSynthesizer
-from llama_index.core.service_context_elements.llm_predictor import LLMPredictorType
 from llama_index.core.types import RESPONSE_TEXT_TYPE
 from llama_index.llms import vllm
 from llama_index.llms.ollama import Ollama
@@ -26,6 +25,12 @@ from custom_components import CustomVllmLLM, CustomSynthesizer
 # 单次查询引擎
 # 对chat_engine =vector_index.as_query_engine()的自定义操作
 class OnceQueryEngine(CustomQueryEngine):
+    # 此处直接使用大模型组件，而不是响应生成器
+    # llm: Ollama = Field(default=None, description="llm")
+    llm: vllm.Vllm = Field(default=None, description="llm")
+    retriever: BaseRetriever = Field(default=None, description="retriever")
+    qa_prompt: PromptTemplate = Field(default=None, description="提示词")
+
     qa_prompt = PromptTemplate(
             "根据以下上下文回答输入问题：\n"
             "---------------------\n"
@@ -35,10 +40,6 @@ class OnceQueryEngine(CustomQueryEngine):
             "我的问题: {query_str}\n"
             "答案: "
     )
-    # 此处直接使用大模型组件，而不是响应生成器
-    # llm: Ollama = Field(default=None, description="llm")
-    llm: vllm.Vllm = Field(default=None, description="llm")
-    retriever: BaseRetriever = Field(default=None, description="retriever")
 
     def __init__(self, retriever: BaseRetriever, llm: vllm.Vllm):
         super().__init__()

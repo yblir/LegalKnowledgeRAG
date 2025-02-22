@@ -8,6 +8,7 @@ import os
 from typing import Any, List, Optional, Sequence
 
 from llama_index.core.base.embeddings.base import Embedding
+from llama_index.legacy.llm_predictor.base import LLMPredictorType
 from llama_index.llms import vllm
 from llama_index.core.embeddings import BaseEmbedding
 from llama_index.core.llms import (
@@ -27,7 +28,6 @@ from llama_index.core.base.base_retriever import BaseRetriever
 from llama_index.core.prompts.mixin import PromptDictType
 from llama_index.core.query_engine import CustomQueryEngine
 from llama_index.core.response_synthesizers import BaseSynthesizer
-from llama_index.core.service_context_elements.llm_predictor import LLMPredictorType
 from llama_index.core.types import RESPONSE_TEXT_TYPE
 from llama_index.llms import vllm
 from llama_index.llms.ollama import Ollama

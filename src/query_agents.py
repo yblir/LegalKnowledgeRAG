@@ -39,40 +39,19 @@ import pprint, chromadb, sys, os
 from custom_query_engine import OnceQueryEngine, CustomVllmLLM, CustomSynthesizer
 
 
-
-
 # 为单个文件创建agent
-def create_tool_agent(file: str, name):
-    # 数据加载器读取文档
-    document = SimpleDirectoryReader(input_files=[file]).load_data()
-    # 创建句子分割器, 对文档进行分割
-    spliter = SentenceSplitter(chunk_size=200, chunk_overlap=10)
-    # 从句子分割器获得节点数据
-    nodes = spliter.get_nodes_from_documents(document)
-
-    # 将切分好的数据保存在向量库中,使用时直接从库中取
-    if not os.path.exists(f"./storage/{name}"):
-        print('Creating vector index...\n')
-        storage_context = StorageContext.from_defaults(vector_store=vector_store)
-        # 向量存储索引, 只支持一种检索模式，就是根据向量的语义相似度来进行检索,
-        # 对应的检索器类型为VectorIndexRetriever
-        vector_index = VectorStoreIndex(nodes, storage_context=storage_context)
-        vector_index.storage_context.persist(persist_dir=f"./storage/{name}")
-    else:
-        print('Loading vector index...\n')
-        storage_context = StorageContext.from_defaults(persist_dir=f"./storage/{name}", vector_store=vector_store)
-        vector_index = load_index_from_storage(storage_context=storage_context)
+def create_tool_agent(query_engine,summary_engine, name):
 
     # todo 改为改写的自定义查询引擎
-    query_engine = vector_index.as_query_engine(similarity_top_k=5)
+    # query_engine = vector_index.as_query_engine(similarity_top_k=5)
 
     # Create a summary index
     # 文档摘要索引与向量存储索引的最大区别是，其不提供直接对基础Node
     # 进行语义检索的能力，而是提供在文档摘要层进行检索的能力，然后映射到基
     # 础Node。
     # summary_index = SummaryIndex(nodes)
-    summary_index = DocumentSummaryIndex(nodes)
-    summary_engine = summary_index.as_query_engine(response_mode="tree_summarize")
+    # summary_index = DocumentSummaryIndex(nodes)
+    # summary_engine = summary_index.as_query_engine(response_mode="tree_summarize")
 
     # 转换为工具, 供agent调用
     query_tool = QueryEngineTool.from_defaults(
