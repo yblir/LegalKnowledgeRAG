@@ -35,12 +35,12 @@ from queue import Queue
 from pydantic import BaseModel
 
 import pprint, chromadb, sys, os
-
+from loguru import logger
 from custom_query_engine import OnceQueryEngine, CustomVllmLLM, CustomSynthesizer
 
 
 # 为单个文件创建agent
-def create_tool_agent(query_engine,summary_engine, name):
+def create_tool_agent(query_engine,summary_engine, name, agent_llm):
 
     # todo 改为改写的自定义查询引擎
     # query_engine = vector_index.as_query_engine(similarity_top_k=5)
@@ -69,6 +69,7 @@ def create_tool_agent(query_engine,summary_engine, name):
     # 创建一个tool agent
     tool_agent = ReActAgent.from_tools(
             tools=[query_tool, summary_tool],
+            llm=agent_llm,
             verbose=True,
             system_prompt=f"""You are a specialized agent designed to answer queries about {name}.
                           You must ALWAYS use at least one of the tools provided when answering a question;
@@ -80,16 +81,16 @@ def create_tool_agent(query_engine,summary_engine, name):
 
 
 # 为所有文件创建tool agent
-def create_tool_agents(file_paths: Dict[str, str]):
-    print('Creating document agents for all files...\n')
-    tool_agents = {}
-    for file_name, file_path in file_paths.items():
-        tool_agents[file_name] = create_tool_agent(file_path, file_name)
+# def create_tool_agents(file_paths: Dict[str, str]):
+#     print('Creating document agents for all files...\n')
+#     tool_agents = {}
+#     for file_name, file_path in file_paths.items():
+#         tool_agents[file_name] = create_tool_agent(file_path, file_name)
+#
+#     return tool_agents
 
-    return tool_agents
 
-
-def create_top_agent(tool_agents: Dict, callback_manager: CallbackManager):
+def create_top_agent(tool_agents: Dict, callback_manager: CallbackManager, agent_llm):
     all_tools = []
     for file_name in tool_agents.keys():
         law_summary = (
@@ -111,7 +112,7 @@ def create_top_agent(tool_agents: Dict, callback_manager: CallbackManager):
     # 实现一个对象索引,用于检索 合适的tool
     tool_mapping = SimpleToolNodeMapping.from_objects(all_tools)
     # obj_index是否已向量持久化.
-    if not os.path.exists(f"path/top/top"):
+    if not os.path.exists(f"../chroma_db/top_agent"):
         storage_context = StorageContext.from_defaults()
         obj_index = ObjectIndex.from_objects(
                 objects=all_tools,
@@ -119,18 +120,19 @@ def create_top_agent(tool_agents: Dict, callback_manager: CallbackManager):
                 index_cls=VectorStoreIndex,
                 storage_context=storage_context
         )
-        storage_context.persist(persist_dir=f"path/top/top")
+        storage_context.persist(persist_dir=f"../chroma_db/top_agent")
     else:
         storage_context = StorageContext.from_defaults(
-                persist_dir=f"path/top/top"
+                persist_dir=f"../chroma_db/top_agent"
         )
         index = load_index_from_storage(storage_context)
         obj_index = ObjectIndex(index, tool_mapping)
 
-    print('Creating top agent...\n')
+    logger.info('create top_agent agent')
 
     top_agent = ReActAgent.from_tools(
             tool_retriever=obj_index.as_retriever(similarity_top_k=3),
+            llm=agent_llm,
             verbose=True,
             system_prompt="""
                        你是一个被设计来回答关于法律问题的助手。

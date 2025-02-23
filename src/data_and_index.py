@@ -101,14 +101,19 @@ class VectorIndex:
 
         return kw_index
 
-    def create_summary_index(self, file_path: str):
+    def create_summary_index(self, file_path: str, llm=None):
         # 获得不带后缀的文件名
         # file_name = file_path.split(os.sep)[-1].split('.')[0]
         node = self.read_data(file_path)
 
         # 文档摘要索引与向量存储索引的最大区别是，其不提供直接对基础Node
         # 进行语义检索的能力，而是提供在文档摘要层进行检索的能力，然后映射到基础Node。
-        return DocumentSummaryIndex(node)
+        if llm is None:
+            summary=DocumentSummaryIndex(node)
+        else:
+            summary=DocumentSummaryIndex(node,llm=llm)
+
+        return summary
 
 if __name__ == '__main__':
     # index=VectorIndex()

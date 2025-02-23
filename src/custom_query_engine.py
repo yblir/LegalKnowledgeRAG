@@ -30,6 +30,7 @@ class OnceQueryEngine(CustomQueryEngine):
     llm: vllm.Vllm = Field(default=None, description="llm")
     retriever: BaseRetriever = Field(default=None, description="retriever")
     qa_prompt: PromptTemplate = Field(default=None, description="提示词")
+    synthesizer: CustomSynthesizer = Field(default=None, description="自定义响应器")
 
     qa_prompt = PromptTemplate(
             "根据以下上下文回答输入问题：\n"
@@ -41,7 +42,7 @@ class OnceQueryEngine(CustomQueryEngine):
             "答案: "
     )
 
-    def __init__(self, retriever: BaseRetriever, llm: vllm.Vllm):
+    def __init__(self, retriever: BaseRetriever, llm: CustomVllmLLM):
         super().__init__()
         self.retriever = retriever
         # self.llm = llm
