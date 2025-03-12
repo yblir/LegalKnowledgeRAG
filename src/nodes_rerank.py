@@ -22,8 +22,8 @@ class BgeRerank(BaseNodePostprocessor):
     def rerank(self, query, texts):
         url = f"{self.url}/rerank"
         request_body = {
-            "query": query,
-            "texts": texts,
+            "query"   : query,
+            "texts"   : texts,
             "truncate": False
         }
         response = requests.post(url, json=request_body)
@@ -64,14 +64,15 @@ class BgeRerank(BaseNodePostprocessor):
         return new_nodes
 
 
-# 单独使用
-# 构造自定义的节点后处理器
-customRerank = BgeRerank(url="http://localhost:8080", top_n=2)
-# 测试处理 Node
-rerank_nodes = customRerank.postprocess_nodes(nodes, query_str='百度文心一言的逻辑推理能力怎么样?')
+if __name__ == '__main__':
+    # 单独使用
+    # 构造自定义的节点后处理器
+    customRerank = BgeRerank(url="http://localhost:8080", top_n=2)
+    # 测试处理 Node
+    rerank_nodes = customRerank.postprocess_nodes(nodes, query_str='百度文心一言的逻辑推理能力怎么样?')
 
-# 在构造查询引擎时直接使用
-query_engine = vector_index.as_query_engine(
-        similarity_top_k=3,
-        node_postprocessors=[customRerank],
-)
+    # 在构造查询引擎时直接使用
+    query_engine = vector_index.as_query_engine(
+            similarity_top_k=3,
+            node_postprocessors=[customRerank],
+    )

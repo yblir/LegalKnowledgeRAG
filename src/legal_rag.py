@@ -12,10 +12,14 @@ from custom_components import CustomVllmLLM, CustomSynthesizer
 from custom_query_engine import OnceQueryEngine, ChatQueryEngine
 from data_and_index import VectorIndex
 from query_agents import create_tool_agent, create_top_agent
+from fusion_retriever import FusionRetriever2
 import nltk
+
 Settings.embed_model = OllamaEmbedding(model_name="milkey/dmeta-embedding-zh:f16")
 
 nltk.data.path.append('/mnt/e/PyCharm/PreTrainModel/nltk_data')
+
+
 class LegalRAG:
     def __init__(self, llm_path):
         # 自定义大模型
@@ -33,12 +37,17 @@ class LegalRAG:
             file_path = str(file_path)
 
             # 自定义查询引擎, 构建单次对话向量查询引擎
+            # 使用融合检索引擎
             vector_index = self.index.create_vector_index(file_path)
-            vector_engine = OnceQueryEngine(
-                    vector_index.as_retriever(similarity_top_k=5),
-                    self.custom_model
+            # vector_engine = OnceQueryEngine(
+            #         vector_index.as_retriever(similarity_top_k=5),
+            #         self.custom_model
+            # )
+            kw_index = self.index.create_keyword_index(file_path)
+            fusion_retriever_engine = FusionRetriever2(
+                    retrievers=[vector_index.as_retriever(), kw_index.as_retriever()],
+                    retriever_llm=self.custom_model,
             )
-
             # 构建语义检索引擎, 这里使用直接构建的方式, 使用自定义的大模型
             summary_index = self.index.create_summary_index(
                     file_path,
@@ -52,7 +61,8 @@ class LegalRAG:
 
             # 构建工具agent
             tool_agent = create_tool_agent(
-                    query_engine=vector_engine,
+                    # query_engine=vector_engine,
+                    query_engine=fusion_retriever_engine,
                     summary_engine=summary_engine,
                     name=file_name,
                     agent_llm=self.custom_model,
@@ -70,15 +80,15 @@ class LegalRAG:
 
 
 if __name__ == '__main__':
-    # rag = LegalRAG('/media/xk/D6B8A862B8A8433B/data/qwen2_05b')
-    # top_agent = rag.top_agent('/home/xk/PycharmProjects/llamaindexProjects/falv_rag/data')
+    rag = LegalRAG('/media/xk/D6B8A862B8A8433B/data/qwen2_05b')
+    top_agent = rag.top_agent('/home/xk/PycharmProjects/llamaindexProjects/falv_rag/data')
 
     # rag = LegalRAG('/mnt/e/PyCharm/PreTrainModel/qwen2_05b')
-    rag = LegalRAG('/mnt/e/PyCharm/PreTrainModel/qwen2_7b_instruct_awq_int4')
-    top_agent = rag.top_agent('../data')
+    # rag = LegalRAG('/mnt/e/PyCharm/PreTrainModel/qwen2_7b_instruct_awq_int4')
+    # top_agent = rag.top_agent('../data')
 
     # rag = LegalRAG(r'E:\PyCharm\PreTrainModel\qwen_7b_chat_int4')
     # top_agent = rag.top_agent('../data')
-    res=top_agent.streaming_chat_repl()
+    res = top_agent.streaming_chat_repl()
     # print(res)
     # print('333')

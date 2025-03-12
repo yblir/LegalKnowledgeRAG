@@ -9,6 +9,7 @@ from llama_index.core import Document, SimpleDirectoryReader, VectorStoreIndex, 
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.node_parser import TokenTextSplitter
 from llama_index.core.retrievers.fusion_retriever import FUSION_MODES
+from llama_index.core.postprocessor import LLMRerank
 from llama_index.embeddings.ollama import OllamaEmbedding
 from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.llms.ollama import Ollama
@@ -23,7 +24,7 @@ from llama_index.core.response.pprint_utils import pprint_response
 from llama_index.core.query_engine import TransformQueryEngine
 from llama_index.core import Document, SimpleDirectoryReader, VectorStoreIndex, Settings, get_response_synthesizer, \
     PromptTemplate, SummaryIndex
-from llama_index.retrievers.bm25 import BM25Retriever
+# from llama_index.retrievers.bm25 import BM25Retriever
 from llama_index.core.retrievers import BaseRetriever
 from typing import List
 from llama_index.core.schema import NodeWithScore
@@ -208,14 +209,14 @@ class FusionRetriever(BaseRetriever):
 # 使用llamaindex官方封装的融合检索器
 # def fusion_retriever():
 class FusionRetriever2:
-    def __init__(self, retriever_llm, similarity_top_k=3, num_queries=4):
+    def __init__(self, retrievers,retriever_llm, similarity_top_k=3, num_queries=4):
         # 两个检索器
-        vector_retriever = create_vector_index_retriever('南京市')
-        kw_retriever = create_kw_index_retriever('南京市')
+        # vector_retriever = create_vector_index_retriever('南京市')
+        # kw_retriever = create_kw_index_retriever('南京市')
         # QueryFusionRetriever封装全面，有子问题转换器， mode是只融合检索后方法排序方法
         # 可以为当前融合检索指定大模型，否则使用全局模型
         fusion_retriever = QueryFusionRetriever(
-                retrievers=[vector_retriever, kw_retriever],
+                retrievers=retrievers,  # [vector_retriever,kw_retriever]
                 llm=retriever_llm,
                 similarity_top_k=similarity_top_k,
                 num_queries=num_queries,  # set this to 1 to disable query generation
